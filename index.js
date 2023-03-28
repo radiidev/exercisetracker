@@ -51,6 +51,20 @@ app.post("/api/users", (req, res) => {
     });
 });
 
+app.get("/api/users", (req, res) => {
+  exerciseLogs
+    .find()
+    .select({ username: true, _id: true })
+    .exec()
+    .then((users) => {
+      res.json(users);
+    })
+    .catch((err) => {
+      res.sendStatus(500);
+      res.json({ error: `Error while retrieving users list:\n${err}` });
+    });
+});
+
 const listener = app.listen(PORT, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
