@@ -130,6 +130,26 @@ app.post("/api/users/:_id/exercises", (req, res) => {
     });
 });
 
+app.get("/api/users/:_id/logs", (req, res) => {
+  const _id = req.params._id;
+  exerciseLogs
+    .findById(_id)
+    .select({ "log._id": false })
+    .then((excLogs) => {
+      if (excLogs) {
+        const excLogsJson = excLogs.toJSON();
+        excLogsJson.count = excLogsJson.log.length;
+        return res.json(excLogsJson);
+      }
+      res.status(400);
+      res.json({ error: `No user with id: '${_id}' exists` });
+    })
+    .catch((err) => {
+      res.status(400);
+      res.json({ error: `Input user id: '${_id}' is malformed` });
+    });
+});
+
 const listener = app.listen(PORT, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
