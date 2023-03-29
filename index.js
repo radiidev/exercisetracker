@@ -65,11 +65,21 @@ app.get("/api/users", (req, res) => {
     });
 });
 
+const isValidDate = (dateString) => {
+  if (!Number.isNaN(Number(dateString))) return true;
+  const date = new Date(dateString);
+  return !Number.isNaN(date.getTime());
+};
+
 app.post("/api/users/:_id/exercises", (req, res) => {
   const _id = req.params._id;
   const description = req.body.description;
   const duration = req.body.duration;
   const date = req.body.date ? req.body.date : new Date().toDateString();
+  if (!isValidDate(date)) {
+    res.status(400);
+    return res.json({ error: `Input date: '${date}' is not valid` });
+  }
   exerciseLogs
     .exists({ _id: _id })
     .then((userExists) => {
