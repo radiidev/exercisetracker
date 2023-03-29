@@ -65,12 +65,7 @@ app.get("/api/users", (req, res) => {
     });
 });
 
-app.post("/api/users/:_id/exercises", (req, res) => {
-  const _id = req.params._id;
-  const description = req.body.description;
-  const duration = req.body.duration;
-
-  let date = req.body.date;
+const getDateInTicks = (date) => {
   // current time in tick if no date specified
   if (!date) date = new Date().getTime();
   // Convert String to Number if date specified in ticks
@@ -78,6 +73,15 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   // get date ticks from ticks Number or date String
   date = new Date(date).getTime();
   // date will be NaN if invalid date String is provided
+  return date;
+};
+
+app.post("/api/users/:_id/exercises", (req, res) => {
+  const _id = req.params._id;
+  const description = req.body.description;
+  const duration = req.body.duration;
+
+  let date = getDateInTicks(req.body.date);
   if (Number.isNaN(Number(date))) {
     res.status(400);
     return res.json({ error: `Input date: '${req.body.date}' is not valid` });
