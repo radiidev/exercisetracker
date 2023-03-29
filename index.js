@@ -79,7 +79,7 @@ const getDateInTicks = (date) => {
 app.post("/api/users/:_id/exercises", (req, res) => {
   const _id = req.params._id;
   const description = req.body.description;
-  const duration = req.body.duration;
+  const duration = Number(req.body.duration);
 
   let date = getDateInTicks(req.body.date);
   if (Number.isNaN(Number(date))) {
