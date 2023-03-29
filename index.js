@@ -139,12 +139,42 @@ app.post("/api/users/:_id/exercises", (req, res) => {
 
 app.get("/api/users/:_id/logs", (req, res) => {
   const _id = req.params._id;
+  const limit = req.query.limit
+    ? Math.trunc(Number(req.query.limit))
+    : Number.MAX_SAFE_INTEGER;
+  if (Number.isNaN(limit)) {
+    res.status(400);
+    return res.json({
+      error: `Query key 'limit''s value '${req.query.limit}' is not a number`,
+    });
+  }
+  const from = req.query.from ? getDateInTicks(req.query.from) : 0;
+  if (Number.isNaN(from)) {
+    res.status(400);
+    return res.json({
+      error: `Query key 'from''s value '${req.query.from}' is invalid for date`,
+    });
+  }
+  const to = req.query.to
+    ? getDateInTicks(req.query.to)
+    : Number.MAX_SAFE_INTEGER;
+  if (Number.isNaN(to)) {
+    res.status(400);
+    return res.json({
+      error: `Query key 'to''s value '${req.query.to}' is invalid for date`,
+    });
+  }
   exerciseLogs
     .findById(_id)
-    .select({ "logs._id": false, __v: false })
+    .select({ "log._id": false, __v: false })
     .then((excLogs) => {
       if (excLogs) {
         let excLogsJson = excLogs.toJSON();
+        excLogsJson.log = excLogsJson.log.filter(
+          (log) => log.date >= from && log.date <= to
+        );
+        excLogsJson.log.sort((a, b) => a.date - b.date);
+        excLogsJson.log = excLogsJson.log.slice(0, limit);
         excLogsJson.count = excLogsJson.log.length;
         excLogsJson.log = excLogsJson.log.map((log) => {
           log.date = new Date(log.date).toDateString();
