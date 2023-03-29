@@ -141,7 +141,7 @@ app.get("/api/users/:_id/logs", (req, res) => {
   const _id = req.params._id;
   exerciseLogs
     .findById(_id)
-    .select({ "logs._id": false })
+    .select({ "logs._id": false, __v: false })
     .then((excLogs) => {
       if (excLogs) {
         let excLogsJson = excLogs.toJSON();
