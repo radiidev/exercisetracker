@@ -15,11 +15,11 @@ mongoose.connect(MONGODB_URI, {
 
 const exerciseLogsSchema = new mongoose.Schema({
   username: { type: String, required: true },
-  log: [
+  logs: [
     {
       description: { type: String, required: true },
       duration: { type: Number, required: true },
-      date: { type: String, required: true },
+      date: { type: Number, required: true },
     },
   ],
 });
@@ -65,21 +65,24 @@ app.get("/api/users", (req, res) => {
     });
 });
 
-const isValidDate = (dateString) => {
-  if (!Number.isNaN(Number(dateString))) return true;
-  const date = new Date(dateString);
-  return !Number.isNaN(date.getTime());
-};
-
 app.post("/api/users/:_id/exercises", (req, res) => {
   const _id = req.params._id;
   const description = req.body.description;
   const duration = req.body.duration;
-  const date = req.body.date ? req.body.date : new Date().toDateString();
-  if (!isValidDate(date)) {
+
+  let date = req.body.date;
+  // current time in tick if no date specified
+  if (!date) date = new Date().getTime();
+  // Convert String to Number if date specified in ticks
+  if (!Number.isNaN(Number(date))) date = Number(date);
+  // get date ticks from ticks Number or date String
+  date = new Date(date).getTime();
+  // date will be NaN if invalid date String is provided
+  if (Number.isNaN(Number(date))) {
     res.status(400);
-    return res.json({ error: `Input date: '${date}' is not valid` });
+    return res.json({ error: `Input date: '${req.body.date}' is not valid` });
   }
+
   exerciseLogs
     .exists({ _id: _id })
     .then((userExists) => {
@@ -89,7 +92,7 @@ app.post("/api/users/:_id/exercises", (req, res) => {
             { _id: _id },
             {
               $push: {
-                log: {
+                logs: {
                   description: description,
                   duration: duration,
                   date: date,
@@ -104,7 +107,7 @@ app.post("/api/users/:_id/exercises", (req, res) => {
                 _id: _id,
                 description: description,
                 duration: duration,
-                date: date,
+                date: new Date(date).toDateString(),
               });
             } else {
               res.json(500);
@@ -134,11 +137,15 @@ app.get("/api/users/:_id/logs", (req, res) => {
   const _id = req.params._id;
   exerciseLogs
     .findById(_id)
-    .select({ "log._id": false })
+    .select({ "logs._id": false })
     .then((excLogs) => {
       if (excLogs) {
-        const excLogsJson = excLogs.toJSON();
-        excLogsJson.count = excLogsJson.log.length;
+        let excLogsJson = excLogs.toJSON();
+        excLogsJson.count = excLogsJson.logs.length;
+        excLogsJson.logs = excLogsJson.logs.map((log) => {
+          log.date = new Date(log.date).toDateString();
+          return log;
+        });
         return res.json(excLogsJson);
       }
       res.status(400);
