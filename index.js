@@ -65,6 +65,61 @@ app.get("/api/users", (req, res) => {
     });
 });
 
+app.post("/api/users/:_id/exercises", (req, res) => {
+  const _id = req.params._id;
+  const description = req.body.description;
+  const duration = req.body.duration;
+  const date = req.body.date ? req.body.date : new Date().toDateString();
+  exerciseLogs
+    .exists({ _id: _id })
+    .then((userExists) => {
+      if (userExists) {
+        exerciseLogs
+          .updateOne(
+            { _id: _id },
+            {
+              $push: {
+                log: {
+                  description: description,
+                  duration: duration,
+                  date: date,
+                },
+              },
+            },
+            { runValidators: true }
+          )
+          .then((excLogs) => {
+            if (excLogs.modifiedCount) {
+              res.json({
+                _id: _id,
+                description: description,
+                duration: duration,
+                date: date,
+              });
+            } else {
+              res.json(500);
+              res.json({
+                error: `Failed to add exercise logs to database:\n${excLogs}`,
+              });
+            }
+          })
+          .catch((err) => {
+            res.status(500);
+            res.json({
+              error: `Failed to add exercise logs to database:\n${err}`,
+            });
+          });
+      } else {
+        res.status(403);
+        res.json({ error: `No user with id: ${_id} exists` });
+      }
+    })
+    .catch((err) => {
+      res.status(500);
+      res.json({ error: "Failed to check user in database" });
+    });
+});
+
 const listener = app.listen(PORT, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
