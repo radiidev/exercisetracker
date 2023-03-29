@@ -15,7 +15,7 @@ mongoose.connect(MONGODB_URI, {
 
 const exerciseLogsSchema = new mongoose.Schema({
   username: { type: String, required: true },
-  logs: [
+  log: [
     {
       description: { type: String, required: true },
       duration: { type: Number, required: true },
@@ -92,7 +92,7 @@ app.post("/api/users/:_id/exercises", (req, res) => {
             { _id: _id },
             {
               $push: {
-                logs: {
+                log: {
                   description: description,
                   duration: duration,
                   date: date,
@@ -141,8 +141,8 @@ app.get("/api/users/:_id/logs", (req, res) => {
     .then((excLogs) => {
       if (excLogs) {
         let excLogsJson = excLogs.toJSON();
-        excLogsJson.count = excLogsJson.logs.length;
-        excLogsJson.logs = excLogsJson.logs.map((log) => {
+        excLogsJson.count = excLogsJson.log.length;
+        excLogsJson.log = excLogsJson.log.map((log) => {
           log.date = new Date(log.date).toDateString();
           return log;
         });
