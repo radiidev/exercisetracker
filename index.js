@@ -88,9 +88,10 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   }
 
   exerciseLogs
-    .exists({ _id: _id })
-    .then((userExists) => {
-      if (userExists) {
+    .findById(_id)
+    .select({ username: 1 })
+    .then((user) => {
+      if (user) {
         exerciseLogs
           .updateOne(
             { _id: _id },
@@ -109,6 +110,7 @@ app.post("/api/users/:_id/exercises", (req, res) => {
             if (excLogs.modifiedCount) {
               res.json({
                 _id: _id,
+                username: user.username,
                 description: description,
                 duration: duration,
                 date: new Date(date).toDateString(),
